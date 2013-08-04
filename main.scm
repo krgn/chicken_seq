@@ -4,9 +4,11 @@
 
 (foreign-declare "#include \"rawmidi.h\"")
 
-(define-foreign-record-type (midi-port "snd_rawmidi_t")
-   (constructor: make-midi-port)
-   (destructor: free-midi-port))
+(define sizeof-snd_rawmidi_t (foreign-value "sizeof(snd_rawmidi_t)" int))
+
+(define-record midi-port buffer)
+
+(define-foreign-type midi-port scheme-pointer midi-port-buffer)
 
 (define open-midi-port
   (foreign-lambda* 
@@ -24,12 +26,13 @@
   (foreign-lambda int "rawmidi_hw_print_info" c-string))
 
 (define (main)
-  (let ((outport (make-midi-port))
-        (inport (make-midi-port))
+  (let ((outport (make-midi-port (make-blob sizeof-snd_rawmidi_t)))
+        (inport (make-midi-port (make-blob sizeof-snd_rawmidi_t)))
         (file "/dev/midi2")
-        (device "UM-1"))
-    ;; (print (open-midi-port inport outport file device 0))
-    ;; (print (write-note outport '#u8(#x90 60 100) 3))))
-    (print-device-info file)))
+        (device "UM-12"))
+    (print (open-midi-port inport outport file device 0))
+    (print (write-note outport '#u8(#x90 60 100) 3))))
+    ;; (print-device-info file)))
+
 
 (main)
