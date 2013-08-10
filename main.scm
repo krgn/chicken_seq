@@ -1,38 +1,22 @@
-(import foreign)
-(import srfi-14)
-(import foreigners)
-
-(foreign-declare "#include \"rawmidi.h\"")
-
-(define sizeof-snd_rawmidi_t (foreign-value "sizeof(snd_rawmidi_t)" int))
-
-(define-record midi-port buffer)
-
-(define-foreign-type midi-port scheme-pointer midi-port-buffer)
-
-(define open-midi-port
-  (foreign-lambda* 
-   int ((midi-port input)
-        (midi-port output)
-        (c-string file)
-        (c-string device)
-        (int mode))
-   "C_return(rawmidi_hw_open(&input, &output, file, device, mode));"))
-
-(define write-note 
-  (foreign-lambda size_t "rawmidi_hw_write" midi-port u8vector size_t ))
-
-(define print-device-info
-  (foreign-lambda int "rawmidi_hw_print_info" c-string))
-
+(use srfi-18)
+(use srfi-19)
+(use zmq)
+(use midi)
+ 
 (define (main)
-  (let ((outport (make-midi-port (make-blob sizeof-snd_rawmidi_t)))
-        (inport (make-midi-port (make-blob sizeof-snd_rawmidi_t)))
-        (file "/dev/midi2")
-        (device "UM-12"))
-    (print (open-midi-port inport outport file device 0))
-    (print (write-note outport '#u8(#x90 60 100) 3))))
-    ;; (print-device-info file)))
-
+  (let ((device (open-device "/dev/midi1"))
+        (socket (make-socket 'push (make-context 4))))
+    (bind-socket socket "tcp://127.0.0.1:3000")
+    (connect-socket socket "tcp://127.0.0.1:3000")
+    (thread-start! 
+     (let loop ()
+       (when #t
+         (send-message socket "tick" #t)
+         (write-midi device (make-note 1 30 100))
+         (thread-sleep! 1)
+         (send-message socket "tock" #t)
+         (write-midi device (make-note 1 30 0))
+         (thread-sleep! 1)
+         (loop))))))
 
 (main)
