@@ -27,6 +27,7 @@
      (let loop ((msg ""))
        ;; parse json from zmq message body and update the respective track
        (let ((track (with-input-from-string msg read-json)))
-         (if track (update-track track pattern))
-         (print "received and processed a message: " msg))
+         (if track (begin
+                     (update-track track pattern)
+                     (print "received and processed a message: " msg))))
        (loop (receive-message* socket)))))
