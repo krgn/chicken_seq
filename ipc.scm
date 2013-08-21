@@ -19,8 +19,7 @@
   (define (update-pattern data pattern)
     (let ([tracks (alist-ref 'tracks data)])
       ;; we just take the json apart, and apply the new data to our update-track function
-      (for-each (lambda (track) (update-track track pattern)) (vector->list tracks))
-      (pp pattern)))
+      (for-each (lambda (track) (update-track track pattern)) (vector->list tracks))))
 
   ;; update the global pattern (mutate!)
   (define (update-track track pattern)
