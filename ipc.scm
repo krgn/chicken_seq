@@ -36,17 +36,3 @@
          ;; parse the (hopefully) json
          (if track (update-track track pattern))
          (loop (read-json inport consume-trailing-whitespace: #f)))))))
-
-;; ---- Server Process that hogs a socket and waits for a connection ----
-;; (define sock (socket af/inet sock/stream))
-;; (socket-bind sock (inet-address "127.0.0.1" 8124))
-;; (socket-listen sock 1)
-
-;; ---- here comes the juicy part: ----
-;; ---- warning, this blocks until a connection has been established.----
-;; ---- also, accept() returns the file descriptor for the connection, so don't use /sock/
-;; ---- for (socket-send ..) later on, as its going to produce a broken pipe error
-;; (define a-connection (socket-accept sock)) 
-
-;; ---- now we can simply send some stuff to the connection: ----
-;; (socket-send a-connection (u8vector->blob (u8vector 1 2 3 4 5 6 7 8 9)))
