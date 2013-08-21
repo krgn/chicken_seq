@@ -1,32 +1,55 @@
-(use srfi-18 srfi-19 zmq)
-(use midi seq-ipc)
+(use srfi-18 srfi-19 srfi-34 zmq)
+(use midi socket unix-sockets ipc)
 
 (define (main)
-  (let* (;;(device (open-device "/dev/midi1"))
-        (pattern (make-default-pattern))
-        (clock-socket (make-socket 'push (make-context 4)))
-        (song-update-socket (make-socket 'pull (make-context 4)))
-        (ipc-thread (make-thread 
-                     (lambda () (process-ipc-messages song-update-socket pattern))))) ; make a push type socket
+  ;; won't proceed past this point unless node server has started and created the sockets
+  (let-values ([(clock-inport clock-outport) (unix-connect "/tmp/clock-socket")]
+               [(song-update-inport song-update-outport) (unix-connect "/tmp/song-update-socket")])
+    (let* (;;(device (open-device "/dev/midi1"))
+           (current-bpm 120)
+           (current-step 0)
+           (sixteenth-note (sixteenth-by-bpm current-bpm))
+           (pattern (make-default-pattern))
+           (ipc-thread (process-song-updates song-update-inport pattern)))
 
-    (bind-socket clock-socket "tcp://127.0.0.1:8888") ; the sender/pusher binds
-    (connect-socket song-update-socket "tcp://127.0.0.1:8889") ; the sender/pusher binds
-    
-    ;; start the thread containing our loop to block for and process
-    ;; incoming messages from node.js
-    (print "starting IPC thread")
-    (thread-start! ipc-thread)
+      ;; ------------------------------------------------------------ ;;
+      ;; start the thread containing our loop to block for and process
+      ;; incoming messages from node.js
+      ;; (print "starting IPC thread")
+      (thread-start! ipc-thread)
 
-    (print "entering main loop")
-    (let main-loop ((c 0))
-      (begin
-        ;; now, we move on with midi and trigger messages 
-        ;; ------
-        ;; send a trigger message 
-        (pp (alist-ref 'steps (alist-ref 0 pattern)))
-        ;; (send-message socket (modulo c 16))
-        ;; (write-midi device (make-note 1 30 100))
-        (thread-sleep! 1))
-      (main-loop (+ c 1)))))
+      (print "entering main loop")
+      ;; ------------------------------------------------------------ ;;
+      ;; enter the main sequencer loop
+      (let main-loop ((counter 0))        ;counter is always in milliseconds
+        (begin
+          ;; every time we're on an exactt sixteenth step we increment or reset our current-step
+          (if (zero? (modulo counter (sixteenth-by-bpm current-bpm)))
+              (begin 
+                (if (not (= counter (bar-in-ms current-bpm)))
+                    (set! current-step (inexact->exact (/ counter sixteenth-note))))
+                (write current-step clock-outport)))
 
+          ;; we exectute this function for each track in in pattern
+          (for-each (lambda (track)
+                      (let ((latency (alist-ref 'latency (cdr track)))
+                            (steps (alist-ref 'steps (cdr track))))
+                        ;; if the current step in the current track is non-zero we see if we have to trigger something
+                        (unless (zero? (vector-ref steps current-step))
+                          ;; the 0-latency case first
+                          (cond [(and (zero? latency)
+                                      (zero? (modulo counter (sixteenth-by-bpm current-bpm))))
+                                 (print "name: " (alist-ref 'name (cdr track)) " no latency")]
+                                [(and (not (zero? latency))
+                                      (= latency (modulo counter (sixteenth-by-bpm current-bpm))))
+                                 (print "name: " (alist-ref 'name (cdr track)) " latency ticks: " latency)]))))
+                    pattern)
+          (thread-sleep! 0.001))          ;sleep for one millisecond
+        (let ((bar-len-ms (bar-in-ms current-bpm)))
+          (cond [(>= counter bar-len-ms) (main-loop 0)]
+                [(< counter bar-len-ms) (main-loop (+ counter 1) )]))))))
 (main)
+
+
+;; (send-message clock-socket (number->string (modulo c 16)))
+;; (write-midi device (make-note 1 30 100))

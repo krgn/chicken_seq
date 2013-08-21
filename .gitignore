@@ -4,3 +4,4 @@
 /node_modules
 /seq-ipc.so
 /seq-ipc.import.scm
+/ipc.so

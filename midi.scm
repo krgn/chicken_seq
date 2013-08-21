@@ -1,7 +1,21 @@
-(module midi (open-device close-device write-midi make-note)
+(module midi 
+  ;; exposes ..
+  (open-device close-device write-midi make-note bar-in-ms quaver-by-bpm sixteenth-by-bpm)
+
   (import chicken scheme)
-  (use posix)
-  (use srfi-4)
+  (use posix srfi-4)
+
+  (define (bar-in-ms bpm)
+    (inexact->exact 
+     (* (* (/ 60 bpm) 4) 1000)))
+
+  (define (quaver-by-bpm bpm)
+    (inexact->exact 
+     (* (/ 60 bpm) 1000)))
+
+  (define (sixteenth-by-bpm bpm)
+    (inexact->exact 
+     (* (/ (/ 60 bpm) 4) 1000)))
 
   (define (open-device path)
     (let ((fd (file-open path open/wronly)))
