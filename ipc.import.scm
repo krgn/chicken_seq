@@ -13,8 +13,9 @@
   'ipc
   (list)
   '((update-track . ipc#update-track)
+    (update-pattern . ipc#update-pattern)
     (make-default-pattern . ipc#make-default-pattern)
-    (process-song-updates . ipc#process-song-updates))
+    (process-ipc-messages . ipc#process-ipc-messages))
   (list)
   (list))
 

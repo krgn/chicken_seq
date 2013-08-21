@@ -1,4 +1,4 @@
-(use srfi-18 srfi-19 srfi-34 zmq)
+(use srfi-18 srfi-19 srfi-34 args)
 (use midi socket unix-sockets ipc)
 
 (define (main)
@@ -10,12 +10,12 @@
            (current-step 0)
            (sixteenth-note (sixteenth-by-bpm current-bpm))
            (pattern (make-default-pattern))
-           (ipc-thread (process-song-updates song-update-inport pattern)))
+           (ipc-thread (process-ipc-messages song-update-inport pattern)))
 
       ;; ------------------------------------------------------------ ;;
       ;; start the thread containing our loop to block for and process
       ;; incoming messages from node.js
-      ;; (print "starting IPC thread")
+      (print "starting IPC thread")
       (thread-start! ipc-thread)
 
       (print "entering main loop")
@@ -50,6 +50,4 @@
                 [(< counter bar-len-ms) (main-loop (+ counter 1) )]))))))
 (main)
 
-
-;; (send-message clock-socket (number->string (modulo c 16)))
 ;; (write-midi device (make-note 1 30 100))
