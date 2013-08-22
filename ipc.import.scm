@@ -8,13 +8,13 @@
          unix-sockets
          ports
          srfi-18
-         data-structures))
+         data-structures
+         data))
 (##sys#register-compiled-module
   'ipc
   (list)
-  '((update-track . ipc#update-track)
-    (update-pattern . ipc#update-pattern)
-    (make-default-pattern . ipc#make-default-pattern)
+  '((update-track . data#update-track)
+    (update-pattern . data#update-pattern)
     (process-ipc-messages . ipc#process-ipc-messages))
   (list)
   (list))

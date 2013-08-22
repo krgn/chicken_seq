@@ -1,31 +1,9 @@
 (module ipc 
-  (update-track update-pattern make-default-pattern process-ipc-messages)
+  (update-track update-pattern process-ipc-messages)
   
   (import chicken scheme)
   (use extras medea unix-sockets ports srfi-18 data-structures)
-
-  (define (make-default-pattern)
-    (list 
-     (cons 0 (list (cons 'name "bd")     (cons 'latency 0) (cons 'steps (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)))) 
-     (cons 1 (list (cons 'name "rattle") (cons 'latency 0) (cons 'steps (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))))
-     (cons 2 (list (cons 'name "hats")   (cons 'latency 0) (cons 'steps (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))))
-     (cons 3 (list (cons 'name "snare")  (cons 'latency 0) (cons 'steps (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))))
-     (cons 4 (list (cons 'name "hands")  (cons 'latency 0) (cons 'steps (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))))
-     (cons 5 (list (cons 'name "cym")    (cons 'latency 0) (cons 'steps (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))))
-     (cons 6 (list (cons 'name "hb")     (cons 'latency 0) (cons 'steps (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))))
-     (cons 7 (list (cons 'name "clap")   (cons 'latency 0) (cons 'steps (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))))
-     (cons 8 (list (cons 'name "cong")   (cons 'latency 0) (cons 'steps (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))))))
-
-  (define (update-pattern data pattern)
-    (let ([tracks (alist-ref 'tracks data)])
-      ;; we just take the json apart, and apply the new data to our update-track function
-      (for-each (lambda (track) (update-track track pattern)) (vector->list tracks))))
-
-  ;; update the global pattern (mutate!)
-  (define (update-track track pattern)
-    (let* ([id (string->number (alist-ref 'id track))]
-           [new-steps (alist-ref 'steps track)])
-      (alist-update! 'steps new-steps (alist-ref id pattern))))
+  (use data)
 
   ;; use a named let loop to  process all messages in a blocking style 
   ;; for processing in a separate thread. takes a socket and the target 

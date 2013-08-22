@@ -1,11 +1,11 @@
 (use srfi-18 srfi-19 srfi-34 args)
-(use midi socket unix-sockets ipc)
+(use midi data socket unix-sockets ipc)
 
 (define (main)
   ;; won't proceed past this point unless node server has started and created the sockets
   (let-values ([(clock-inport clock-outport) (unix-connect "/tmp/clock-socket")]
                [(song-update-inport song-update-outport) (unix-connect "/tmp/song-update-socket")])
-    (let* (;;(device (open-device "/dev/midi1"))
+    (let* ((device (open-device "/dev/midi1"))
            (current-bpm 120)
            (current-step 0)
            (sixteenth-note (sixteenth-by-bpm current-bpm))
@@ -32,17 +32,17 @@
 
           ;; we exectute this function for each track in in pattern
           (for-each (lambda (track)
-                      (let ((latency (alist-ref 'latency (cdr track)))
-                            (steps (alist-ref 'steps (cdr track))))
+                      (let ((latency (instrument-latency (cdr track)))
+                            (steps (instrument-steps (cdr track))))
                         ;; if the current step in the current track is non-zero we see if we have to trigger something
                         (unless (zero? (vector-ref steps current-step))
                           ;; the 0-latency case first
                           (cond [(and (zero? latency)
                                       (zero? (modulo counter (sixteenth-by-bpm current-bpm))))
-                                 (print "name: " (alist-ref 'name (cdr track)) " no latency")]
+                                 (write-midi device (make-note #x01 30 100))]
                                 [(and (not (zero? latency))
                                       (= latency (modulo counter (sixteenth-by-bpm current-bpm))))
-                                 (print "name: " (alist-ref 'name (cdr track)) " latency ticks: " latency)]))))
+                                 (write-midi device (make-note #x01 30 100))]))))
                     pattern)
           (thread-sleep! 0.001))          ;sleep for one millisecond
         (let ((bar-len-ms (bar-in-ms current-bpm)))
@@ -50,4 +50,3 @@
                 [(< counter bar-len-ms) (main-loop (+ counter 1) )]))))))
 (main)
 
-;; (write-midi device (make-note 1 30 100))

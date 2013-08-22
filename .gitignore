@@ -5,3 +5,4 @@
 /seq-ipc.so
 /seq-ipc.import.scm
 /ipc.so
+/data.so
