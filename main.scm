@@ -39,10 +39,10 @@
                           ;; the 0-latency case first
                           (cond [(and (zero? latency)
                                       (zero? (modulo counter (sixteenth-by-bpm current-bpm))))
-                                 (write-midi device (make-note #x01 30 100))]
+                                 (write-midi device (make-note #x01 (instrument-note (cdr track)) 100))]
                                 [(and (not (zero? latency))
                                       (= latency (modulo counter (sixteenth-by-bpm current-bpm))))
-                                 (write-midi device (make-note #x01 30 100))]))))
+                                 (write-midi device (make-note #x01 (instrument-note (cdr track)) 100))]))))
                     pattern)
           (thread-sleep! 0.001))          ;sleep for one millisecond
         (let ((bar-len-ms (bar-in-ms current-bpm)))
