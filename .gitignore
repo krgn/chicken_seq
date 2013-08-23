@@ -6,3 +6,4 @@
 /seq-ipc.import.scm
 /ipc.so
 /data.so
+/chicken_seq
