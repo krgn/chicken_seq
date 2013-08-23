@@ -1,0 +1,28 @@
+(compile -s -O3 song-data.scm -j song-data)
+(compile -s -O3 song-data.import.scm)
+(compile -s -O3 ipc.scm -j ipc)
+(compile -s -O3 ipc.import.scm)
+(compile -s -O3 rawmidi.scm -j rawmidi)
+(compile -s -O3 rawmidi.import.scm)
+
+(compile -O3 chicken_seq.scm)
+
+(install-extension
+ 'song-data
+ '("song-data.so" "song-data.import.so")
+ `((version "0.0.1")))
+
+(install-extension
+ 'ipc
+ '("ipc.so" "ipc.import.so")
+ `((version "0.0.1")))
+
+(install-extension
+ 'rawmidi
+ '("rawmidi.so" "rawmidi.import.so")
+ `((version "0.0.1")))
+
+(install-program
+ 'chicken_seq
+  "chicken_seq"
+ `((version "0.0.1")))

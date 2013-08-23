@@ -1,0 +1,4 @@
+((author "Me")
+ (synopsis "A cool program")
+ (license "GPLv3")
+ (files "chicken_seq.scm" "chicken_seq.setup"))

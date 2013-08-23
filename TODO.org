@@ -1,0 +1,13 @@
+* DONE mit moritz die lage mit den anderen instrumenten abklären
+  hi-hat, 3 toms..
+* DONE add command line args to chicken program
+** DONE args/env for midi device file
+* DONE test with piece of midi gear
+* DONE test latency-scheduling algorithm
+* TODO clean up chicken seq
+* TODO make archlinux image 
+** TODO deploy node application
+** TODO create systemd service file for node process
+** TODO deploy chicken application
+** TODO create systemd service file for node process
+** TODO dd image, gzip and upload

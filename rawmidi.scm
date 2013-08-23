@@ -1,4 +1,4 @@
-(module midi 
+(module rawmidi 
   ;; exposes ..
   (open-device close-device write-midi make-note bar-in-ms quaver-by-bpm sixteenth-by-bpm)
 

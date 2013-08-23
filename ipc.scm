@@ -3,7 +3,7 @@
   
   (import chicken scheme)
   (use extras medea unix-sockets ports srfi-18 data-structures)
-  (use data)
+  (use song-data)
 
   ;; use a named let loop to  process all messages in a blocking style 
   ;; for processing in a separate thread. takes a socket and the target 

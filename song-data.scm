@@ -1,4 +1,4 @@
-(module data
+(module song-data
   (update-track update-pattern make-default-pattern
    instrument-name instrument-note instrument-latency instrument-steps
    instrument-name-set! instrument-note-set! instrument-latency-set! instrument-steps-set!)
