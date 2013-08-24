@@ -1,0 +1,15 @@
+[Unit]
+Description=Chicken MIDI Sequencer
+Requires=mr808.service
+After=mr808.service
+
+[Service]
+User=www
+Type=forking
+PIDFile=/var/run/chicken_seq.pid
+Restart=always
+ExecStart=/usr/bin/chicken_seq
+DefaultEnvironment="SEQ_MIDI_DEVICE=/dev/midi1"
+
+[Install]
+WantedBy=basic.target

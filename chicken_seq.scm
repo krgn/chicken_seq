@@ -14,47 +14,30 @@
   ;; error handling; bail out of the target device does not exist
   (let* ([env-var (get-environment-variable "SEQ_MIDI_DEVICE")]
          [default-device "/dev/midi1"])
-    (cond [(and env-var
-                (not (zero? (string-length env-var)))
-                (file-exists/directory? env-var))
+    (cond [(and env-var (file-exists/directory? env-var))
            (set! device-file env-var)]
-          [(and env-var
-                (not (zero? (string-length env-var)))
-                (not (file-exists/directory? env-var)))
-           (bail-out "Midi device not found.")]
-          [(and (or (not env-var)
-                    (zero? (string-length env-var)))
-                (file-exists/directory? "midi1" "/dev"))
+          [(and (not env-var) (file-exists/directory? default-device))
            (set! device-file default-device)]
           [else (bail-out "No midi device found.")]))
 
   ;; set up values for IPC socket paths
-  (let* ([clock-socket-env-var (get-environment-variable "CLOCK_SOCKET")]
-	 [song-socket-env-var (get-environment-variable "SONG_UPDATE_SOCKET")]
-	 [clock-socket-default "/tmp/clock-socket"]
-	 [song-socket-default "/tmp/song-update-socket"])
-    (begin
-      ;; deal with clock socket: 1st check there is env var and the file exists, 2nd check default, else bail out
-      (cond ([(and clock-socket-env-var
-		   (not (zero? (string-length clock-socket-env-var)))
-		   (file-exists/directory? clock-socket-env-var))
-	      (set! clock-socket-path clock-socket-env-var)]
-	     [(and (or (not clock-socket-env-var)
-		       (not (file-exists/directory? clock-socket-env-var)))
-		   (file-exists/directory? clock-socket-default))
-	      (set! clock-socket-path clock-socket-default)]
-	     [else (bail-out "clock-socket not found. server running?")]))
-      ;; same here: 1st check there is env var and the file exists, 2nd check default, else bail out
-      (cond ([(and song-socket-env-var
-		   (not (zero? (string-length song-socket-env-var)))
-		   (file-exists/directory? song-socket-env-var))
-	      (set! song-update-socket-path song-socket-env-var)]
-	     [(and (or (not song-socket-env-var)
-		       (not (file-exists/directory? song-socket-env-var)))
-		   (file-exists/directory? song-socket-default))
-	      (set! song-update-socket-path song-socket-default)]
-	     [else (bail-out "song-update-socket not found. server running?")]))))
-
+  (let ([clock-socket-env-var (get-environment-variable "CLOCK_SOCKET")]
+        [song-socket-env-var (get-environment-variable "SONG_UPDATE_SOCKET")]
+        [clock-socket-default "/tmp/clock-socket"]
+        [song-socket-default "/tmp/song-update-socket"])
+    ;; deal with clock socket: 1st check there is env var and the file exists, 2nd check default, else bail out
+    (cond [(and clock-socket-env-var (file-exists/directory? clock-socket-env-var))
+           (set! clock-socket-path clock-socket-env-var)]
+          [(and (not clock-socket-env-var) (file-exists/directory? clock-socket-default))
+           (set! clock-socket-path clock-socket-default)]
+          [else (bail-out "Clock socket not found. Server running?")])
+    ;; same here: 1st check there is env var and the file exists, 2nd check default, else bail out
+    (cond [(and song-socket-env-var (file-exists/directory? song-socket-env-var))
+           (set! song-update-socket-path song-socket-env-var)]
+          [(and (not song-socket-env-var) (file-exists/directory? song-socket-default))
+           (set! song-update-socket-path song-socket-default)]
+          [else (bail-out "song-update-socket does not exist. Server running?")]))
+  
   ;; won't proceed past this point unless node server has started and created the sockets
   (let-values ([(clock-inport clock-outport) (unix-connect clock-socket-path)]
                [(song-update-inport song-update-outport) (unix-connect song-update-socket-path)])
