@@ -1,4 +1,7 @@
 ((author "Me")
  (synopsis "A cool program")
  (license "GPLv3")
+
+ (needs unix-sockets srfi-19 srfi-34 socket directory-utils medea)
+
  (files "chicken_seq.scm" "chicken_seq.setup"))

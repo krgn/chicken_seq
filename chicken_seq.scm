@@ -7,7 +7,9 @@
     (exit 1)))
 
 (define (chicken-seq)
-  (define device-file)
+  (define device-file)			;which midi device to use
+  (define clock-socket-path)		;which unix socket to use for clock events
+  (define song-update-socket-path)	;which unix socket to use for reading updates from web clients
 
   ;; error handling; bail out of the target device does not exist
   (let* ([env-var (get-environment-variable "SEQ_MIDI_DEVICE")]
@@ -26,9 +28,36 @@
            (set! device-file default-device)]
           [else (bail-out "No midi device found.")]))
 
+  ;; set up values for IPC socket paths
+  (let* ([clock-socket-env-var (get-environment-variable "CLOCK_SOCKET")]
+	 [song-socket-env-var (get-environment-variable "SONG_UPDATE_SOCKET")]
+	 [clock-socket-default "/tmp/clock-socket"]
+	 [song-socket-default "/tmp/song-update-socket"])
+    (begin
+      ;; deal with clock socket: 1st check there is env var and the file exists, 2nd check default, else bail out
+      (cond ([(and clock-socket-env-var
+		   (not (zero? (string-length clock-socket-env-var)))
+		   (file-exists/directory? clock-socket-env-var))
+	      (set! clock-socket-path clock-socket-env-var)]
+	     [(and (or (not clock-socket-env-var)
+		       (not (file-exists/directory? clock-socket-env-var)))
+		   (file-exists/directory? clock-socket-default))
+	      (set! clock-socket-path clock-socket-default)]
+	     [else (bail-out "clock-socket not found. server running?")]))
+      ;; same here: 1st check there is env var and the file exists, 2nd check default, else bail out
+      (cond ([(and song-socket-env-var
+		   (not (zero? (string-length song-socket-env-var)))
+		   (file-exists/directory? song-socket-env-var))
+	      (set! song-update-socket-path song-socket-env-var)]
+	     [(and (or (not song-socket-env-var)
+		       (not (file-exists/directory? song-socket-env-var)))
+		   (file-exists/directory? song-socket-default))
+	      (set! song-update-socket-path song-socket-default)]
+	     [else (bail-out "song-update-socket not found. server running?")]))))
+
   ;; won't proceed past this point unless node server has started and created the sockets
-  (let-values ([(clock-inport clock-outport) (unix-connect "/tmp/clock-socket")]
-               [(song-update-inport song-update-outport) (unix-connect "/tmp/song-update-socket")])
+  (let-values ([(clock-inport clock-outport) (unix-connect clock-socket-path)]
+               [(song-update-inport song-update-outport) (unix-connect song-update-socket-path)])
     (let* ([device (open-device device-file)]
            (current-bpm 120)
            (current-step 0)
